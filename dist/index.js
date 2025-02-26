@@ -1,5 +1,16 @@
 "use strict";
 // plugin.ts
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -45,28 +56,25 @@ var process_1 = __importDefault(require("process"));
 var webito_plugin_sdk_1 = __importDefault(require("webito-plugin-sdk"));
 var starter = new webito_plugin_sdk_1.default.WebitoPlugin('starter');
 starter.registerHook(webito_plugin_sdk_1.default.hooks.paymentsCreate, function (_a) {
-    var vars = _a.vars, data = _a.data;
+    var variables = _a.variables, data = _a.data;
     return __awaiter(void 0, void 0, void 0, function () {
         var inputdata, create;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     inputdata = {
-                        "merchant": vars.merchant,
-                        "amount": data.amount * 10,
-                        "callbackUrl": data.callback,
+                        "pin": variables.pin,
+                        "amount": data.amount,
+                        "callback": data.callback,
                         "description": data.payment,
                     };
-                    return [4 /*yield*/, axios_1.default.post('https://gateway.zibal.ir/v1/request', inputdata)];
+                    return [4 /*yield*/, axios_1.default.post('https://panel.aqayepardakht.ir/api/v2/create', inputdata)];
                 case 1:
                     create = _b.sent();
-                    if (create.data.trackId) {
+                    if (create.data.transid) {
                         return [2 /*return*/, {
                                 status: true,
-                                data: {
-                                    transaction: create.data,
-                                    url: 'https://gateway.zibal.ir/start/' + create.data.trackId
-                                }
+                                data: __assign(__assign({}, (create.data || {})), { url: 'https://panel.aqayepardakht.ir/startpay/' + create.data.transid })
                             }];
                     }
                     else {
@@ -80,20 +88,21 @@ starter.registerHook(webito_plugin_sdk_1.default.hooks.paymentsCreate, function 
     });
 });
 starter.registerHook(webito_plugin_sdk_1.default.hooks.paymentsVerify, function (_a) {
-    var vars = _a.vars, data = _a.data;
+    var variables = _a.variables, data = _a.data;
     return __awaiter(void 0, void 0, void 0, function () {
         var inputdata, verify;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     inputdata = {
-                        "merchant": vars.merchant,
-                        "trackId": data.payment.transaction.transaction.trackId,
+                        "pin": variables.pin,
+                        "amount": data.payment.amount,
+                        "transid": data.payment.transaction.transid,
                     };
-                    return [4 /*yield*/, axios_1.default.post('https://gateway.zibal.ir/v1/verify', inputdata)];
+                    return [4 /*yield*/, axios_1.default.post('https://panel.aqayepardakht.ir/api/v2/verify', inputdata)];
                 case 1:
                     verify = _b.sent();
-                    if (verify.data.status == 1) {
+                    if ((verify.data.code == 1) || (verify.data.code == 2)) {
                         return [2 /*return*/, {
                                 status: true,
                             }];
